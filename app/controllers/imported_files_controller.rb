@@ -23,21 +23,52 @@ class ImportedFilesController < ApplicationController
 		@imported_file.user = current_user
 
 		if @imported_file.save
+			newrow=[]
 
-			CSV.foreach(temporal_file.path, headers: true) do |row|
-			  items << row.to_h
+			CSV.foreach(temporal_file.path) do |row|
 
-			  puts row.inspect
+				newrow = row[0]
+				newrow << ";"+@imported_file.id.to_s
+				newrow << ";"+current_user.id.to_s
+				newrow << ";Pending"
+				newrow << ""
+
+				values = newrow.split(';');
+
+				# ERB:
+				# This is not a performanced solution. Need to be changed with "activerecord-import" gem 
+
+				inserted_record = ImportedRecord.new
+				inserted_record.column_1 = values[0]
+				inserted_record.column_2 = values[1]
+				inserted_record.column_3 = values[2]
+				inserted_record.column_4 = values[3]
+				inserted_record.column_5 = values[4]
+				inserted_record.column_6 = values[5]
+				inserted_record.user = current_user
+				inserted_record.imported_file = @imported_file
+				inserted_record.status = values[8]
+				inserted_record.message = values[9]
+				inserted_record.save
+			  	items << values
+
+			  	puts inserted_record.inspect
+
 			end
 
 			@total_rows = items.size
-
 			flash[:notice] = "Upload completed. " + @total_rows.to_s + " records in file."
 
 
 		else
 			@total_rows = 0
+			flash[:error] = "Warning! Something went wrong. " + @total_rows.to_s + " records in file."
 		end
+
+
+
+
+		# Importing without model validations
 
 		#Item.import(items)
 		redirect_to @imported_file

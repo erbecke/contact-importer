@@ -1,5 +1,6 @@
 <h1>Import Log #<%= @imported_file.id %></h1>
 
+
 <% flash.each do |type, msg| %>
   <div>
     <%= msg %>
@@ -30,9 +31,22 @@
 
 
 
+<table>
+  <% @imported_file.imported_records.reverse.each do |imported_record| %>
+    <tr>
+      <td><%= imported_record.id %></td>
+      <td><%= imported_record.column_1 %></td>
+      <td><%= imported_record.column_2 %></td>
+      <td><%= imported_record.column_3 %></td>
+      <td><%= imported_record.column_4 %></td>
+      <td><%= imported_record.column_5 %></td>
+      <td><%= imported_record.column_6 %></td>
+      <td><%= imported_record.column_7 %></td>
+      <td><%= imported_record.status %></td>
+      <td><%= imported_record.message %></td>
 
-<div class="form-group">
- 
-</div>
+    </tr>
+  <% end %>
+</table>
 
 

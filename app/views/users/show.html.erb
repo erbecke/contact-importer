@@ -9,7 +9,7 @@
 <div>
   <%= form_tag({:controller => 'imported_files',:action => :import}, multipart: true) do %>
     <%= hidden_field_tag :user , @user %>
-    <%= file_field_tag :file %>
+    <%= file_field_tag :file, :required => true %>
     <%= submit_tag( "Upload File" ) %>
   <% end %>
 </div>

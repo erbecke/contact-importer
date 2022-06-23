@@ -8,8 +8,8 @@ class CreateImportedRecords < ActiveRecord::Migration[5.2]
       t.string :column_5
       t.string :column_6
       t.string :column_7
-      t.references :imported_files, foreign_key: true
-      t.references :users, foreign_key: true
+      t.references :imported_file, foreign_key: true
+      t.references :user, foreign_key: true
       t.string :status
       t.string :message
 
