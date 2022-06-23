@@ -4,10 +4,13 @@ class SessionsController < ApplicationController
   		if user && user.authenticate(params[:session][:password])
     		session[:user_id] = user.id
    	 		flash[:notice] = "Logged in successfully."
+    		# go to user profile
     		redirect_to user
+
   		else
     		flash.now[:alert] = "There was something wrong with your login details."
     		render 'new'
+    		puts "fail"
   		end
 	end
 

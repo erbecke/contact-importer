@@ -1,0 +1,28 @@
+<%= form_with(model: @imported_file, local: true) do |f| %>
+
+<div class="form-group">
+  <%= f.label :filename %><br/>
+  <%= f.text_field :filename, class: "form-control" %>
+</div>
+
+<div class="form-group">
+  <%= f.label :status %><br/>
+  <%= f.email_field :status, class: "form-control" %>
+</div>
+
+<div class="form-group">
+  <%= f.label :date %><br/>
+  <%= f.password_field :date, class: "form-control" %>
+</div>
+
+<div class="form-group">
+  <%= f.label :format %><br/>
+  <%= f.password_field :format, class: "form-control" %>
+</div>
+
+
+<div class="form-group">
+  <%= f.submit %>
+</div>
+
+<% end %>

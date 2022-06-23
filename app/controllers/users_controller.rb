@@ -16,9 +16,12 @@ class UsersController < ApplicationController
 
  	def show
  		    @user = User.find(params[:id])
-
+ 		    @session = session[:id]
  	end
 
+ 	def logout
+ 		redirect_to '/logout'
+ 	end
 
 private
 

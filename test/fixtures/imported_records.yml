@@ -1,0 +1,27 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  column_1: MyString
+  column_2: MyString
+  column_3: MyString
+  column_4: MyString
+  column_5: MyString
+  column_6: MyString
+  column_7: MyString
+  imported_files: one
+  users: one
+  status: MyString
+  message: MyString
+
+two:
+  column_1: MyString
+  column_2: MyString
+  column_3: MyString
+  column_4: MyString
+  column_5: MyString
+  column_6: MyString
+  column_7: MyString
+  imported_files: two
+  users: two
+  status: MyString
+  message: MyString

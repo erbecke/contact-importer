@@ -1,5 +1,12 @@
 <%= form_with(scope: :session, url: login_path) do |f| %>
 
+<% flash.each do |type, msg| %>
+  <div>
+    <%= msg %>
+  </div>
+<% end %>
+
+
 <div class="form-group">
   <%= f.label :email %><br/>
   <%= f.email_field :email, class: "form-control" %>
@@ -15,3 +22,4 @@
 </div>
 
 <% end %>
+

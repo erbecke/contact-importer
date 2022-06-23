@@ -1,0 +1,38 @@
+<h1>Import Log #<%= @imported_file.id %></h1>
+
+<% flash.each do |type, msg| %>
+  <div>
+    <%= msg %>
+  </div>
+<% end %>
+
+
+
+<div class="form-group">
+  Filename: <%= @imported_file.filename %>
+</div>
+
+<div class="form-group">
+  Status: <%= @imported_file.status %>
+</div>
+
+<div class="form-group">
+ Date: <%= @imported_file.date %>
+</div>
+
+<div class="form-group">
+  Format: <%= @imported_file.format %>
+</div>
+
+<div class="form-group">
+  User: <%= @imported_file.user.email %>
+</div>
+
+
+
+
+<div class="form-group">
+ 
+</div>
+
+

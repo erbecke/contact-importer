@@ -25,7 +25,8 @@ gem 'jbuilder', '~> 2.5'
 # Use Redis adapter to run Action Cable in production
 # gem 'redis', '~> 4.0'
 # Use ActiveModel has_secure_password
-# Uncomment by Eddie 
+
+# Uncommented by ERB 
 gem 'bcrypt', '~> 3.1.7'
 
 # Use ActiveStorage variant
@@ -36,6 +37,13 @@ gem 'bcrypt', '~> 3.1.7'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.1.0', require: false
+
+
+# added by ERB:
+# this gems reduce de workload during CSV imports
+gem 'activerecord-import'
+
+
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
