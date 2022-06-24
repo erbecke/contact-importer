@@ -5,7 +5,7 @@ class SessionsController < ApplicationController
     		session[:user_id] = user.id
    	 		flash[:notice] = "Logged in successfully."
     		# go to user profile
-    		redirect_to user
+    		redirect_to imported_files_path
 
   		else
     		flash.now[:alert] = "There was something wrong with your login details."

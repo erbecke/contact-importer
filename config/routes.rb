@@ -9,8 +9,11 @@ Rails.application.routes.draw do
 
   resources :users, except: [:new]
   resources :imported_files
+  resources :contacts, except: [:new]
 
-  post "import", to: "imported_files#import"
+  post "upload", to: "imported_files#upload"
+  patch "imported_files/format_headers/:id", to: "imported_files#format_headers"
+  # get "imported_files/format_headers/:id", to: "imported_files#format_headers"
 
   root 'welcome#index'
 

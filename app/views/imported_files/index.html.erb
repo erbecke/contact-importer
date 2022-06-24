@@ -1,0 +1,45 @@
+<p>
+  <strong>Logged as:</strong>
+  <%= current_user.email %> | <%= link_to 'Logout', logout_path, method: "delete" %>  |  <%= link_to 'Contacts', contacts_path %>
+
+</p>
+ 
+
+
+<div class="py-5">
+  <h4>Upload file</h4>
+  <div>
+    <%= form_tag({:controller => 'imported_files',:action => :upload}, multipart: true) do %>
+      <%= hidden_field_tag :user , @user %>
+      <%= file_field_tag :file, :required => true %>
+      <%= submit_tag( "Upload File" ) %>
+    <% end %>
+  </div>
+</div>
+
+
+
+
+
+ <h1>Processes history:</h1>
+
+<table class="table table-striped">
+  <tr>
+    <th>Id</th>
+    <th>File</th>
+    <th>Date</th>
+    <th>Status</th>
+    <th colspan="2"></th>
+  </tr>
+ 
+  <% @imported_files.reverse.each do |imported_file| %>
+    <tr>
+      <td><%= imported_file.id %></td>
+      <td><%= imported_file.filename %></td>
+      <td><%= imported_file.date %></td>
+      <td><%= imported_file.status %></td>
+
+      <td><%= link_to 'Show', imported_file_path(imported_file) %></td>
+    </tr>
+  <% end %>
+</table>

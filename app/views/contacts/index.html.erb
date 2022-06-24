@@ -1,0 +1,33 @@
+<h1>Contacts:</h1>
+
+<table class="table table-striped">
+  <tr>
+    <th>Id</th>
+    <th>Name</th>
+    <th>Birth</th>
+    <th>Phone</th>
+    <th>Address</th>
+    <th>Credit Card</th>
+    <th>Franchise</th>
+    <th>Email</th>
+
+    <th colspan="2"></th>
+  </tr>
+ 
+
+  <% @contacts.reverse.each do |contact| %>
+    <tr>
+      <td><%= contact.id %></td>
+      <td><%= contact.name %></td>
+      <td><%= contact.birth %></td>
+      <td><%= contact.phone %></td>
+      <td><%= contact.address %></td>
+      <td><%= contact.credit_card %></td>
+      <td><%= contact.franchise %></td>
+      <td><%= contact.email %></td>
+    </tr>
+   <!-- <% contact.destroy %> -->
+  <% end %>
+
+   <%= link_to 'Back', imported_files_path %>
+</table>
