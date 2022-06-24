@@ -29,24 +29,68 @@
   User: <%= @imported_file.user.email %>
 </div>
 
+<%= form_with url: "/search", method: :get do |form| %>
+
+    <table class="table table-striped my-4 py-4">
+      <% if @imported_file.format == nil or @imported_file.format = "" %>
+
+        <div class="my-2 alert alert-warning" role="alert">
+          <h4 class="">⚠️ Please verify the correct header for each column of this file</h4> 
+        </div>
+
+        <tr>
+          <th></th>
+          <% for @i in 1..6 do %>
+            <th>
+              <%= select_tag "column_"+@i.to_s, raw(render  'select'), {:class => 'form-select text-primary', :required=>"true"} %>
+            </th>
+          <% end %> 
+        </tr>
+      <% end %>
+
+      <% x=0 %>
+      <% @imported_file.imported_records.limit(4).each do |imported_record| %>
+        <tr>
+          <td><%= x+=1 %></td>
+          <td><%= imported_record.column_1 %></td>
+          <td><%= imported_record.column_2 %></td>
+          <td><%= imported_record.column_3 %></td>
+          <td><%= imported_record.column_4 %></td>
+          <td><%= imported_record.column_5 %></td>
+          <td><%= imported_record.column_6 %></td>
+          <td><%= imported_record.column_7 %></td>
+          <td><%= imported_record.status %></td>
+          <td><%= imported_record.message %></td>
+        </tr>
+      <% end %>
+
+      <% s = @imported_file.imported_records.size %>
+      <% if s > x then %>
+        <tr> 
+          <td>...</td>
+         
+        </tr>
+
+        <% imported_record =  @imported_file.imported_records.last   %>
+        <tr>
+          <td><%= s+=1 %></td>
+          <td><%= imported_record.column_1 %></td>
+          <td><%= imported_record.column_2 %></td>
+          <td><%= imported_record.column_3 %></td>
+          <td><%= imported_record.column_4 %></td>
+          <td><%= imported_record.column_5 %></td>
+          <td><%= imported_record.column_6 %></td>
+          <td><%= imported_record.column_7 %></td>
+          <td><%= imported_record.status %></td>
+          <td><%= imported_record.message %></td>
+        </tr>
+      <% end %>
+      
+
+    </table>
+      <%= form.submit "Continue", {:class => 'btn btn-primary '}%>
 
 
-<table>
-  <% @imported_file.imported_records.reverse.each do |imported_record| %>
-    <tr>
-      <td><%= imported_record.id %></td>
-      <td><%= imported_record.column_1 %></td>
-      <td><%= imported_record.column_2 %></td>
-      <td><%= imported_record.column_3 %></td>
-      <td><%= imported_record.column_4 %></td>
-      <td><%= imported_record.column_5 %></td>
-      <td><%= imported_record.column_6 %></td>
-      <td><%= imported_record.column_7 %></td>
-      <td><%= imported_record.status %></td>
-      <td><%= imported_record.message %></td>
-
-    </tr>
-  <% end %>
-</table>
+<% end %>
 
 
