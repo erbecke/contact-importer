@@ -32,7 +32,7 @@ class ImportedFilesController < ApplicationController
 		#
 		# Comment by ERB:
 		# performance could be improved for large datasets using gems 
-		# 
+		# not running on background
 
 		require 'csv'
 		#require "activerecord-import"
@@ -64,14 +64,17 @@ class ImportedFilesController < ApplicationController
 				# Must to be changed with "activerecord-import" gem or similar
 
 				# Potential legacy code, must be replaced with gem
+
+				# for security reasons seek and hide credit cards 
 				inserted_record = ImportedRecord.new
-				inserted_record.column_1 = protect_credit_card(values[0])
+				inserted_record.column_1 = protect_credit_card(values[0]) 
 				inserted_record.column_2 = protect_credit_card(values[1])
 				inserted_record.column_3 = protect_credit_card(values[2])
 				inserted_record.column_4 = protect_credit_card(values[3])
 				inserted_record.column_5 = protect_credit_card(values[4])
 				inserted_record.column_6 = protect_credit_card(values[5])
 				inserted_record.column_7 = @franchise
+				inserted_record.column_8 = @encrypted_credit_card
 
 
 				inserted_record.user = current_user
@@ -99,38 +102,15 @@ class ImportedFilesController < ApplicationController
 
 	end
 
-	def protect_credit_card(data)
-		# open file to determine file format,
-		# then encrypt credit card numbers
-		# but before encrypt, the system detects if this column is a credit card number to mask
-		return if data == nil
 
-		if (data.length >= 14 and data.length <= 16) and (is_number?(data)) then
-
-			# credit card found
-			if detect_franchise(data) != nil then
-				masked_credit_card = "xxxx-xxxx-xxxx-"+data.last(4).to_s
-				
-				# encrypt original
-				return masked_credit_card
-
-
-			else
-				# not a credit card with franchise
-				return data
-			end 
-
-		else
-			# not a credit card
-			return data
-
-		end
-
-	end
 
 
 
 	def format_headers
+		# 
+		# define columns order
+		#
+
 		@file = ImportedFile.find(params[:id])
 		file_format = params[:column_1] + params[:column_2] + params[:column_3] + params[:column_4] + params[:column_5] + params[:column_6]
 
@@ -196,7 +176,7 @@ class ImportedFilesController < ApplicationController
 					raw_date = row.send("column_" + (i+1).to_s)
 					@contact.birth = Date.parse(raw_date)
 
-					# ACCEPTS ONLY ISO 8601 (%Y%m%d ) and (%F)
+					# ACCEPTS ONLY ISO 8601 dates (%Y%m%d ) and (%F)
 	    			unless (@contact.birth.strftime("%Y-%m-%d") == raw_date or @contact.birth.strftime("%F") == raw_date ) then
 						msgs = msgs + " | Birth date must have ISO 8601 format" 
 					end
@@ -217,36 +197,52 @@ class ImportedFilesController < ApplicationController
 			end
 		end
 
-		
 		@contact.save
 
-
-  	if @contact.errors.any?
-   		
-        @contact.errors.full_messages.each do |msg|
-          msgs = msgs + " | " + msg 
-        end
-        row.message = msgs
-        row.status = "Error"
-        row.save
-    else 
-    	row.message = ""
-        row.status = "Imported Ok"
-        row.save
-    end
-
+	  	if @contact.errors.any?
+	        @contact.errors.full_messages.each do |msg|
+	          msgs = msgs + " | " + msg 
+	        end
+	        row.message = msgs
+	        row.status = "Error"
+	        row.save
+	    else 
+	    	row.message = ""
+	        row.status = "Imported Ok"
+	        row.save
+	    end
 	end
 
 
-	def detect_franchise(credit_card)
-	
-		require 'matrix'
+	def protect_credit_card(data)
+		# open file to determine file format,
+		# then encrypt credit card numbers
+		# but before encrypt, the system detects if this column is a credit card number to mask
+		return if data == nil
 
+		if (data.length >= 14 and data.length <= 16) and (is_number?(data)) then
+			# credit card found
+			if detect_franchise(data) != nil then
+				masked_credit_card = "xxxx-xxxx-xxxx-"+data.last(4).to_s
+				# encrypt original
+				encrypt_credit_card(data)
+				return masked_credit_card
+			else
+				# not a credit card with franchise
+				return data
+			end 
+		else
+			# not a credit card
+			return data
+		end
+	end
+
+	def detect_franchise(credit_card)
+		require 'matrix'
 	    iin_source = credit_card
 	    
 	    if iin_source then 
 	      i=0
-
 	      # 
 	      # IIN Codes structure = string lenght, code range start, code range end, franchise
 	      #   
@@ -336,8 +332,13 @@ class ImportedFilesController < ApplicationController
 	    end  
 	end
 
+	def encrypt_credit_card(data)
+		require 'bcrypt'
 
+		@encrypted_credit_card = BCrypt::Password.create(data)
+		puts @encrypted_credit_card
 
-
+		return @encrypted_credit_card
+	end
 
 end
