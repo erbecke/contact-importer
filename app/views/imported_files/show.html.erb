@@ -28,59 +28,57 @@
 
 
     <table class="table table-striped my-4 py-4">
-      
-      <% if @imported_file.status == nil or @imported_file.status == "Pending" %>
 
+      <% if @edit_table_header  %>
 
-      <%= form_for @imported_file, url: {action: "format_headers"}, html: {class: "nifty_form"} do |form| %>
-
-
-        <% flash.each do |type, msg| %>
-          <% if type == "notice" then %>
-            <div class="my-2 alert alert-success" role="alert">
-              <h4 class="">    <%= msg %></h4> 
-            </div>
-          <% else %>
-            <div class="my-2 alert alert-danger" role="alert">
-              <h4 class="">    <%= msg %></h4> 
-            </div>
+        <%= form_for @imported_file, url: {action: "format_headers"}, html: {class: "nifty_form"} do |form| %>
+          <% flash.each do |type, msg| %>
+            <% if type == "notice" then %>
+              <div class="my-2 alert alert-success" role="alert">
+                <h4 class="">    <%= msg %></h4> 
+              </div>
+            <% else %>
+              <div class="my-2 alert alert-danger" role="alert">
+                <h4 class="">    <%= msg %></h4> 
+              </div>
+            <% end %>
           <% end %>
-        <% end %>
-
-        <div class="my-2 alert alert-warning" role="alert">
-          <h4 class="">Please assign the correct header for each column of this file</h4> 
-        </div>
-
-
-        <tr>
-          <th></th>
-          <% for @i in 1..6 do %>
+          <div class="my-2 alert alert-warning" role="alert">
+            <h4 class="">Please assign the correct header for each column of this file</h4> 
+          </div>
+          <tr>
+            <th></th>
+            <% for @i in 1..6 do %>
+              <th>
+                <%= select_tag "column_"+@i.to_s, raw(render  'select'), {:class => 'form-select text-primary', :required=>"true"} %>
+              </th>
+            <% end %> 
             <th>
-              <%= select_tag "column_"+@i.to_s, raw(render  'select'), {:class => 'form-select text-primary', :required=>"true"} %>
+                <%= form.submit "Assign & Continue", {:class => 'btn btn-primary'} %>
             </th>
-          <% end %> 
-          <th>
-              <%= form.submit "Assign & Continue", {:class => 'btn btn-primary'} %>
-          </th>
-        </tr>
-
+          </tr>
+        <% end %>
       <% end %>
 
 
-
-    <% end %>
-
-
       <% x=0 %>
-      <% @imported_file.imported_records.limit(4).each do |imported_record| %>
+      <% @imported_file.imported_records.limit(@row_limit).each do |imported_record| %>
         <tr>
           <td><%= x+=1 %></td>
           <td><%= imported_record.column_1 %></td>
-          <td><%= imported_record.column_2 %></td>
-          <td><%= imported_record.column_3 %></td>
-          <td><%= imported_record.column_4 %></td>
-          <td><%= imported_record.column_5 %></td>
-          <td><%= imported_record.column_6 %></td>
+          <% if @import_record_details == false %>
+            <td><%= imported_record.column_2 %></td>
+            <td><%= imported_record.column_3 %></td>
+            <td><%= imported_record.column_4 %></td>
+            <td><%= imported_record.column_5 %></td>
+            <td><%= imported_record.column_6 %></td>
+          <% else %>
+            <td><%= imported_record.status %></td>
+            <td><%= imported_record.message %></td>
+
+          <% end %>
+
+
         </tr>
       <% end %>
 
@@ -94,12 +92,7 @@
         <% imported_record =  @imported_file.imported_records.last   %>
         <tr>
           <td><%= s+=1 %></td>
-          <td><%= imported_record.column_1 %></td>
-          <td><%= imported_record.column_2 %></td>
-          <td><%= imported_record.column_3 %></td>
-          <td><%= imported_record.column_4 %></td>
-          <td><%= imported_record.column_5 %></td>
-          <td><%= imported_record.column_6 %></td>
+          <td>Rows in file</td>
 
         </tr>
       <% end %>

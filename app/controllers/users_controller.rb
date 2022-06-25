@@ -15,8 +15,11 @@ class UsersController < ApplicationController
  	end
 
  	def show
+ 			# pending: validate authorization
+
  		    @user = User.find(params[:id])
- 		    @session = session[:id]
+ 		    # @session = session[:id]
+
  	end
 
  	def logout

@@ -8,8 +8,8 @@ class CreateContacts < ActiveRecord::Migration[5.2]
       t.string :credit_card
       t.string :franchise
       t.string :email
+      t.string :encrypted_credit_card
       t.references :user, foreign_key: true
-
       t.timestamps
     end
   end

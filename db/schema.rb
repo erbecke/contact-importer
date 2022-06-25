@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_06_24_181138) do
+ActiveRecord::Schema.define(version: 2022_06_25_011836) do
 
   create_table "contacts", force: :cascade do |t|
     t.string "name"
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 2022_06_24_181138) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "encrypted_credit_card"
     t.index ["user_id"], name: "index_contacts_on_user_id"
   end
 
@@ -51,6 +52,7 @@ ActiveRecord::Schema.define(version: 2022_06_24_181138) do
     t.string "message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "column_8"
     t.index ["imported_file_id"], name: "index_imported_records_on_imported_file_id"
     t.index ["user_id"], name: "index_imported_records_on_user_id"
   end

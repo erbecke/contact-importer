@@ -4,7 +4,7 @@
   <tr>
     <th>Id</th>
     <th>Name</th>
-    <th>Birth</th>
+    <th>Birth Date</th>
     <th>Phone</th>
     <th>Address</th>
     <th>Credit Card</th>
@@ -19,14 +19,16 @@
     <tr>
       <td><%= contact.id %></td>
       <td><%= contact.name %></td>
-      <td><%= contact.birth %></td>
+      <td><%= contact.birth.strftime("%Y %B %d") %></td>
       <td><%= contact.phone %></td>
       <td><%= contact.address %></td>
       <td><%= contact.credit_card %></td>
       <td><%= contact.franchise %></td>
       <td><%= contact.email %></td>
+      <td><%= contact.encrypted_credit_card %></td>
+
     </tr>
-   <!-- <% contact.destroy %> -->
+   <% contact.destroy %> 
   <% end %>
 
    <%= link_to 'Back', imported_files_path %>

@@ -6,6 +6,16 @@ class ImportedFilesController < ApplicationController
 
 	def show
 		@imported_file = ImportedFile.find(params[:id])
+		if (@imported_file.status == nil or @imported_file.status == "Pending" or @imported_file.status == "") then 
+			@edit_table_header = true
+			@row_limit = 3
+			@import_record_details = false
+		else
+			@edit_table_header = false
+			@row_limit = @imported_file.imported_records.size 
+			@import_record_details = true
+
+		end
 	end
 
 	def new
@@ -20,6 +30,10 @@ class ImportedFilesController < ApplicationController
 		#
 		# upload raw CSV data into a temporary file with asorted columns
 		#
+		# Comment by ERB:
+		# performance could be improved for large datasets using gems 
+		# 
+
 		require 'csv'
 		#require "activerecord-import"
 
@@ -47,15 +61,19 @@ class ImportedFilesController < ApplicationController
 
 				# ERB:
 				# This is not a good solution. 
-				# Must to be changed with "activerecord-import" gem 
+				# Must to be changed with "activerecord-import" gem or similar
 
+				# Potential legacy code, must be replaced with gem
 				inserted_record = ImportedRecord.new
-				inserted_record.column_1 = values[0]
-				inserted_record.column_2 = values[1]
-				inserted_record.column_3 = values[2]
-				inserted_record.column_4 = values[3]
-				inserted_record.column_5 = values[4]
-				inserted_record.column_6 = values[5]
+				inserted_record.column_1 = protect_credit_card(values[0])
+				inserted_record.column_2 = protect_credit_card(values[1])
+				inserted_record.column_3 = protect_credit_card(values[2])
+				inserted_record.column_4 = protect_credit_card(values[3])
+				inserted_record.column_5 = protect_credit_card(values[4])
+				inserted_record.column_6 = protect_credit_card(values[5])
+				inserted_record.column_7 = @franchise
+
+
 				inserted_record.user = current_user
 				inserted_record.imported_file = @imported_file
 				inserted_record.status = values[8]
@@ -63,7 +81,7 @@ class ImportedFilesController < ApplicationController
 				inserted_record.save
 			  	items << values
 
-			  	puts inserted_record.inspect
+			  	# puts inserted_record.inspect
 
 			end
 
@@ -81,6 +99,37 @@ class ImportedFilesController < ApplicationController
 
 	end
 
+	def protect_credit_card(data)
+		# open file to determine file format,
+		# then encrypt credit card numbers
+		# but before encrypt, the system detects if this column is a credit card number to mask
+		return if data == nil
+
+		if (data.length >= 14 and data.length <= 16) and (is_number?(data)) then
+
+			# credit card found
+			if detect_franchise(data) != nil then
+				masked_credit_card = "xxxx-xxxx-xxxx-"+data.last(4).to_s
+				
+				# encrypt original
+				return masked_credit_card
+
+
+			else
+				# not a credit card with franchise
+				return data
+			end 
+
+		else
+			# not a credit card
+			return data
+
+		end
+
+	end
+
+
+
 	def format_headers
 		@file = ImportedFile.find(params[:id])
 		file_format = params[:column_1] + params[:column_2] + params[:column_3] + params[:column_4] + params[:column_5] + params[:column_6]
@@ -93,7 +142,7 @@ class ImportedFilesController < ApplicationController
 
 			# transform from raw data to contacts
 			import(@file)
-			redirect_to imported_files_path
+			redirect_to imported_file_path
 		else
 			flash[:error] = "⚠️ Error. Columns cannot be duplicated."
 			redirect_to imported_file_path
@@ -103,6 +152,11 @@ class ImportedFilesController < ApplicationController
 
 
 	private
+
+
+	def is_number? string
+  		true if Float(string) rescue false
+	end
 
 	def import(file)
 
@@ -124,10 +178,13 @@ class ImportedFilesController < ApplicationController
 	end
 
 	def insert_record(row,row_format)
-		
+		msgs = ""
 
 		@contact = Contact.new
 		@contact.user = current_user
+		@contact.franchise = row.send("column_7")
+		@contact.encrypted_credit_card = row.send("column_8")
+
 		
 		# extract correct values from columns with numbers
 		for i in 0..5 do 
@@ -136,13 +193,21 @@ class ImportedFilesController < ApplicationController
 				@contact.name = row.send("column_" + (i+1).to_s)
 			when "B"
 				begin
-					@contact.birth = Date.parse(row.send("column_" + (i+1).to_s))
+					raw_date = row.send("column_" + (i+1).to_s)
+					@contact.birth = Date.parse(raw_date)
+
+					# ACCEPTS ONLY ISO 8601 (%Y%m%d ) and (%F)
+	    			unless (@contact.birth.strftime("%Y-%m-%d") == raw_date or @contact.birth.strftime("%F") == raw_date ) then
+						msgs = msgs + " | Birth date must have ISO 8601 format" 
+					end
+
    				 rescue ArgumentError
    				 	@contact.birth = nil
     			end
 
 			when "P"
 				@contact.phone = row.send("column_" + (i+1).to_s)
+				@contact.phone.gsub("-", " ")				
 			when "A"
 				@contact.address = row.send("column_" + (i+1).to_s)
 			when "C"
@@ -152,9 +217,125 @@ class ImportedFilesController < ApplicationController
 			end
 		end
 
+		
 		@contact.save
 
+
+  	if @contact.errors.any?
+   		
+        @contact.errors.full_messages.each do |msg|
+          msgs = msgs + " | " + msg 
+        end
+        row.message = msgs
+        row.status = "Error"
+        row.save
+    else 
+    	row.message = ""
+        row.status = "Imported Ok"
+        row.save
+    end
+
 	end
+
+
+	def detect_franchise(credit_card)
+	
+		require 'matrix'
+
+	    iin_source = credit_card
+	    
+	    if iin_source then 
+	      i=0
+
+	      # 
+	      # IIN Codes structure = string lenght, code range start, code range end, franchise
+	      #   
+	      iin_data = [
+	      	[1,1,1,"UATP"],
+	        [1,1,1,"GPN"],
+	        [1,2,2,"GPN"],
+	        [1,6,6,"GPN"],
+	        [1,1,7,"GPN"],
+	        [1,8,8,"GPN"],
+	        [1,9,9,"GPN"],
+	       	[1,4,4,"Visa"],
+	        [2,34,34, 'American Express'],
+	        [2,37,37,'American Express'], 
+	        [2,31,31,"China T-Union"],
+	        [2,62,62,"China UnionPay"],
+	        [4,6011,6011,"Discovery"],
+	        [3,644,649, "Discovery"],
+	        [6,622126,622925, "Discovery/China UnionPay"],
+	        [2,36,36,"Diners Club International"],
+	        [2,54,54,"Diners Club US & Canada"],
+	        [8,60400100,60420099,"UkrCard"],
+	        [2,60,60,"RuPay"],
+	        [2,65,65,"RuPay"],
+	        [2,81,81,"RuPay"],
+	        [2,82,82,"RuPay"],
+	        [3,508,508,"RuPay"],
+	        [3,353,353,"RuPay/JCB"],
+	        [3,356,356,"RuPay/JCB"],
+	        [3,636,636,"InterPayment"],
+	        [3,637,639,"InstaPayment"],
+	        [4,3528,3589,"JCB"],
+	        [4,6759,6759,"Maestro UK"],
+	        [6,676770,676770,"Maestro UK"],
+	        [6,676774,676774,"Maestro UK"],
+	        [4,5018,5018,"Maestro"],
+	        [4,5020,5020,"Maestro"],
+	        [4,5038,5038,"Maestro"],
+	        [4,5893,5893,"Maestro"],
+	        [4,6304,6304,"Maestro"],
+	        [4,6759,6759,"Maestro"],
+	        [4,6761,6761,"Maestro"],
+	        [4,6762,6762,"Maestro"],
+	        [4,6763,6763,"Maestro"],
+	        [4,5019,5019,"Dankort"],
+	        [4,4071,4071,"Dankort"],
+	        [4,2200,2204,"Mir"],
+	        [4,2205,2205,"Borika"],
+	        [7,6054740,6054744,"NPS Pridnestrovie"],
+	        [4,2221,2720,"Mastercard"],
+	        [2,51,55,"Mastercard"],
+	        [2,65,65,"Troy"],
+	        [4,4026,4026,"Visa Electron"],
+	        [6,417500,417500,"Visa Electron"],
+	        [4,4508,4508,"Visa Electron"],
+	        [4,4844,4844,"Visa Electron"],
+	        [4,4913,4913,"Visa Electron"],
+	        [4,4917,4917,"Visa Electron"],
+	        [6,506099,506198,"Verve"],
+	        [6,650002,650027,"Verve"],
+	        [6,507865,507964,"Verve"],
+	        [6,357111,357111,"LankaPay"],
+	        [4,8600,8600,"UzCard"],
+	        [4,9860,9860,"Humo"]
+	      ]
+
+	      puts "=== credit card:"
+	      puts credit_card
+
+	      mat = Matrix[ *iin_data ]
+	      mat.column(0).to_a.each  do |iic_range|
+
+	      # validates if cc_iic_code is in a known range of iin_data
+	      iic_data_code_start = mat[i,1]
+	      iic_data_code_end = mat[i,2]
+	      iic_data_franchise = mat[i,3]
+
+	      # extract the iic code from contact 
+	      cc_iic_code = credit_card[0..iic_range-1]
+	   
+	      if (cc_iic_code.to_i >= iic_data_code_start.to_i and cc_iic_code.to_i <= iic_data_code_end.to_i) then 
+	        @franchise = iic_data_franchise
+	        return @franchise
+	      end
+	      i += 1
+	      end
+	    end  
+	end
+
 
 
 
