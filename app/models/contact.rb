@@ -4,6 +4,8 @@ class Contact < ApplicationRecord
 
   belongs_to :user
 
+  before_validation :credit_card_format
+
   validates_uniqueness_of :email, :scope => [:user_id], presence: { message:  " cannot be blank." }
 
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: " must be a valid address." } 
@@ -21,8 +23,17 @@ class Contact < ApplicationRecord
   
   validates :address, presence: { message:  " cannot be blank." }
   validates :franchise, presence: { message:  " cannot be found." }
-  validates :credit_card, presence: { message:  " cannot be blank." },
-                          length: { minimum: 16, message:  " must be at least 16 numbers." }
+  validates :credit_card, presence: { message:  " cannot be blank." }
+  
+
+  def credit_card_format
+      # best if replaced with 
+      # VALID_MASKED_CREDIT_CARD_REGEX = /\A(x+(-x+)+)-[0-9]\z/
+
+      if self.credit_card[0..14] != "xxxx-xxxx-xxxx-"
+        self.credit_card = nil
+      end
+  end
 
   
 
