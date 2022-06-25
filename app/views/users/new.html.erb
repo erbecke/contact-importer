@@ -1,22 +1,52 @@
-<%= form_with(model: @user, local: true) do |f| %>
 
-<div class="form-group">
-  <%= f.label :username %><br/>
-  <%= f.text_field :username, class: "form-control" %>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Contact Importer</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/login">Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/signup">Signup</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<div class="my-4 px-2">
+  <h1>Create your account</h1>
+
+  <%= form_with(model: @user, local: true) do |f| %>
+
+  <div class="form-group my-2">
+    <%= f.label :username %><br/>
+    <%= f.text_field :username, :required => true, class: "form-control" %>
+  </div>
+
+  <div class="form-group my-2">
+    <%= f.label :email %><br/>
+    <%= f.email_field :email, :required => true, class: "form-control" %>
+  </div>
+
+  <div class="form-groupmy-2">
+    <%= f.label :password %><br/>
+    <%= f.password_field :password,:required => true, class: "form-control" %>
+  </div>
+
+  <div class="form-group py-2">
+    <%= f.submit "Sign up", class: "btn btn-primary my-4 px-4" %>
+  </div>
+
+  <% end %>
+
 </div>
 
-<div class="form-group">
-  <%= f.label :email %><br/>
-  <%= f.email_field :email, class: "form-control" %>
-</div>
-
-<div class="form-group">
-  <%= f.label :password %><br/>
-  <%= f.password_field :password, class: "form-control" %>
-</div>
-
-<div class="form-group">
-  <%= f.submit %>
-</div>
-
-<% end %>

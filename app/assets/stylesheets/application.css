@@ -15,3 +15,28 @@
  */
 
 @import "bootstrap";
+
+.pagination {
+  display: inline-block;
+}
+
+.pagination a {
+  color: black;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+.current {
+    display: inline-block;
+  color: black;
+  font-weight: bolder;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+
+
+.page a:hover:not(.current) {background-color: #ddd;}
+

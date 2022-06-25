@@ -1,8 +1,11 @@
 class Contact < ApplicationRecord
   
+  paginates_per 5
+
   belongs_to :user
 
-  validates :email, uniqueness: true, presence: { message:  " cannot be blank." }
+  validates_uniqueness_of :email, :scope => [:user_id], presence: { message:  " cannot be blank." }
+
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: " must be a valid address." } 
 
   validates :name, presence: { message:  " cannot be blank." },
