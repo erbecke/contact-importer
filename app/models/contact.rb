@@ -21,7 +21,9 @@ class Contact < ApplicationRecord
   
   validates :address, presence: { message:  " cannot be blank." }
   validates :franchise, presence: { message:  " cannot be found." }
- 
+  validates :credit_card, presence: { message:  " cannot be blank." },
+                          length: { minimum: 16, message:  " must be at least 16 numbers." }
+
   
 
 end

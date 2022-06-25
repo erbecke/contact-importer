@@ -194,11 +194,20 @@ class ImportedFilesController < ApplicationController
 			when "B"
 				begin
 					raw_date = row.send("column_" + (i+1).to_s)
-					@contact.birth = Date.parse(raw_date)
+					new_date =  Date.parse(raw_date)
 
-					# ACCEPTS ONLY ISO 8601 dates (%Y%m%d ) and (%F)
-	    			unless (@contact.birth.strftime("%Y-%m-%d") == raw_date or @contact.birth.strftime("%F") == raw_date ) then
+					# ACCEPTS ONLY ISO 8601 dates (%Y%m%d ) 
+					# regex ^\d\d\d\d-\d\d-\d\d$
+					puts "============================="
+					puts raw_date
+					puts new_date
+					puts "============================="
+
+	    			if ((new_date.strftime("%Y-%m-%d").to_s == raw_date)) then
+	    				@contact.birth = new_date
+	    			else
 						msgs = msgs + " | Birth date must have ISO 8601 format" 
+						@contact.birth = nil
 					end
 
    				 rescue ArgumentError
