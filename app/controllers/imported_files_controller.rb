@@ -6,14 +6,21 @@ class ImportedFilesController < ApplicationController
 
 	def show
 		@imported_file = ImportedFile.find(params[:id])
+
 		if (@imported_file.status == nil or @imported_file.status == "Pending" or @imported_file.status == "") then 
 			@edit_table_header = true
 			@row_limit = 3
-			@import_record_details = false
+			@display_imported_record_details = false
+			@row_display_errors_only = false
+			@filtered_imported_records = @imported_file.imported_records.limit(@row_limit)
+
 		else
 			@edit_table_header = false
 			@row_limit = @imported_file.imported_records.size 
-			@import_record_details = true
+			@display_imported_record_details = true
+			@row_display_errors_only = true
+			@filtered_imported_records = @imported_file.imported_records.where("status = ?", "Error").limit(@row_limit)
+			# @filtered_imported_records = 
 
 		end
 	end
@@ -52,40 +59,42 @@ class ImportedFilesController < ApplicationController
 			CSV.foreach(temporal_file.path) do |row|
 
 				newrow = row[0]
-				newrow << ";"+@imported_file.id.to_s
-				newrow << ";"+current_user.id.to_s
-				newrow << ";Pending"
-				newrow << ""
+				unless newrow == nil 
 
-				values = newrow.split(';');
+					newrow << ";"+@imported_file.id.to_s
+					newrow << ";"+current_user.id.to_s
+					newrow << ";Pending"
+					newrow << ""
 
-				# ERB:
-				# This is not a good solution. 
-				# Must to be changed with "activerecord-import" gem or similar
+					values = newrow.split(';');
 
-				# Potential legacy code, must be replaced with gem
+					# ERB:
+					# This is not a good solution. 
+					# Must to be changed with "activerecord-import" gem or similar
 
-				# for security reasons seek and hide credit cards 
-				inserted_record = ImportedRecord.new
-				inserted_record.column_1 = protect_credit_card(values[0]) 
-				inserted_record.column_2 = protect_credit_card(values[1])
-				inserted_record.column_3 = protect_credit_card(values[2])
-				inserted_record.column_4 = protect_credit_card(values[3])
-				inserted_record.column_5 = protect_credit_card(values[4])
-				inserted_record.column_6 = protect_credit_card(values[5])
-				inserted_record.column_7 = @franchise
-				inserted_record.column_8 = @encrypted_credit_card
+					# Potential legacy code, must be replaced with gem
+
+					# for security reasons seek and hide credit cards 
+					inserted_record = ImportedRecord.new
+					inserted_record.column_1 = protect_credit_card(values[0]) 
+					inserted_record.column_2 = protect_credit_card(values[1])
+					inserted_record.column_3 = protect_credit_card(values[2])
+					inserted_record.column_4 = protect_credit_card(values[3])
+					inserted_record.column_5 = protect_credit_card(values[4])
+					inserted_record.column_6 = protect_credit_card(values[5])
+					inserted_record.column_7 = @franchise
+					inserted_record.column_8 = @encrypted_credit_card
 
 
-				inserted_record.user = current_user
-				inserted_record.imported_file = @imported_file
-				inserted_record.status = values[8]
-				inserted_record.message = values[9]
-				inserted_record.save
-			  	items << values
+					inserted_record.user = current_user
+					inserted_record.imported_file = @imported_file
+					inserted_record.status = values[8]
+					inserted_record.message = values[9]
+					inserted_record.save
+				  	items << values
 
-			  	# puts inserted_record.inspect
-
+				  	# puts inserted_record.inspect
+			  	end
 			end
 
 			@total_rows = items.size
@@ -142,15 +151,44 @@ class ImportedFilesController < ApplicationController
 
 		puts "========================================================================================"
 		puts "Start validation for " + file.id.to_s
-		sleep 1
 
+		file.status = "Processing"
 		row_format = file.format
+		@row_index = 0
+
 		file.imported_records.each do |row|
 			insert_record(row,row_format)
 
 		end
 
-		sleep 1
+		#
+		# Import Process Summary:
+		# 
+		msg_row_count = file.imported_records.size.to_s + " rows processed. "
+		rows_with_errors = file.imported_records.where("status = ?", "Error").count
+
+		if @summary_errors = rows_with_errors > 0
+			
+			msg = "⚠️ Process failed. "
+			msg << msg_row_count 
+			msg << rows_with_errors.to_s + " rows couldn't be imported. "
+			file.status = "Failed"
+			file.save
+			flash[:error] = msg
+
+		else
+			file.status = "Finished"
+			file.save 
+			msg = "✅ Process finished. " 
+			msg << msg_row_count
+
+			flash[:notice] = msg
+
+		end
+		
+
+
+
 
 		puts "End of validation for " + file.id.to_s
 		puts "========================================================================================"
@@ -158,7 +196,8 @@ class ImportedFilesController < ApplicationController
 	end
 
 	def insert_record(row,row_format)
-		msgs = ""
+		@row_index += 1
+		msgs = "Row #" + @row_index.to_s 
 
 		@contact = Contact.new
 		@contact.user = current_user
@@ -334,7 +373,7 @@ class ImportedFilesController < ApplicationController
 
 	def encrypt_credit_card(data)
 		require 'bcrypt'
-
+		BCrypt::Engine.cost = 6
 		@encrypted_credit_card = BCrypt::Password.create(data)
 		puts @encrypted_credit_card
 
