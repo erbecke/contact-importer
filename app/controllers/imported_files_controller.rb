@@ -215,9 +215,6 @@ class ImportedFilesController < ApplicationController
 				@contact.address = row.send("column_" + (i+1).to_s)
 			when "C"
 				@contact.credit_card = row.send("column_" + (i+1).to_s)
-				puts "============================="
-				puts @contact.credit_card 
-				puts "============================="
 			when "E"
 				@contact.email = row.send("column_" + (i+1).to_s)
 			end
