@@ -194,10 +194,9 @@ class ImportedFilesController < ApplicationController
 			when "B"
 				begin
 					raw_date = row.send("column_" + (i+1).to_s)
-					new_date =  Date.parse(raw_date)
-
+					new_date = Date.parse(raw_date)
 					# ACCEPTS ONLY ISO 8601 dates (%Y%m%d ) 
-	    			if ((new_date.strftime("%Y-%m-%d").to_s == raw_date)) then
+	    			if ((new_date.strftime("%Y-%m-%d").to_s == raw_date.strip)) then
 	    				@contact.birth = new_date
 	    			else
 						msgs = msgs + " | Birth date must have ISO 8601 format" 

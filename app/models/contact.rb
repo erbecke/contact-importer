@@ -29,9 +29,10 @@ class Contact < ApplicationRecord
   def credit_card_format
       # best if replaced with 
       # VALID_MASKED_CREDIT_CARD_REGEX = /\A(x+(-x+)+)-[0-9]\z/
-
-      if self.credit_card[0..14] != "xxxx-xxxx-xxxx-"
-        self.credit_card = nil
+      if self.credit_card 
+        if self.credit_card[0..14] != "xxxx-xxxx-xxxx-"
+          self.credit_card = nil
+        end
       end
   end
 
