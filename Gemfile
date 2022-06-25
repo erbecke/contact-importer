@@ -49,7 +49,7 @@ gem 'jquery-rails'
 gem 'kaminari' 
 
 # this gem reduce de workload during CSV imports
-gem 'activerecord-import'
+# gem 'activerecord-import'
 
 
 group :development, :test do

@@ -30,8 +30,6 @@ class ImportedFilesController < ApplicationController
 	end
 
 
-
-
 	def upload
 
 		#
@@ -42,8 +40,7 @@ class ImportedFilesController < ApplicationController
 		# not running on background
 
 		require 'csv'
-		#require "activerecord-import"
-
+		
 		@imported_file = ImportedFile.new
 		temporal_file = params[:file]
 		items = []
@@ -69,12 +66,12 @@ class ImportedFilesController < ApplicationController
 					values = newrow.split(';');
 
 					# ERB:
-					# This is not a good solution. 
-					# Must to be changed with "activerecord-import" gem or similar
+					# This is not the best solution. 
+					# Must to be changed with "activerecord-import" gem or similar to reduce database load
+					# require "activerecord-import" 
+					# 
 
-					# Potential legacy code, must be replaced with gem
-
-					# for security reasons seek and hide credit cards 
+					# for security reasons we seek and hide credit cards in any column
 					inserted_record = ImportedRecord.new
 					inserted_record.column_1 = protect_credit_card(values[0]) 
 					inserted_record.column_2 = protect_credit_card(values[1])
@@ -93,7 +90,6 @@ class ImportedFilesController < ApplicationController
 					inserted_record.save
 				  	items << values
 
-				  	# puts inserted_record.inspect
 			  	end
 			end
 
@@ -106,13 +102,9 @@ class ImportedFilesController < ApplicationController
 			flash[:error] = "⚠️ Warning! Something went wrong. " + @total_rows.to_s + " records in file."
 		end
 
-		#Item.import(items)
 		redirect_to @imported_file
 
 	end
-
-
-
 
 
 	def format_headers
@@ -149,9 +141,6 @@ class ImportedFilesController < ApplicationController
 
 	def import(file)
 
-		puts "========================================================================================"
-		puts "Start validation for " + file.id.to_s
-
 		file.status = "Processing"
 		row_format = file.format
 		@row_index = 0
@@ -179,19 +168,12 @@ class ImportedFilesController < ApplicationController
 		else
 			file.status = "Finished"
 			file.save 
-			msg = "✅ Process finished. " 
+			msg = "✅ Process successfully finished. " 
 			msg << msg_row_count
 
 			flash[:notice] = msg
 
 		end
-		
-
-
-
-
-		puts "End of validation for " + file.id.to_s
-		puts "========================================================================================"
 
 	end
 
@@ -203,7 +185,6 @@ class ImportedFilesController < ApplicationController
 		@contact.user = current_user
 		@contact.franchise = row.send("column_7")
 		@contact.encrypted_credit_card = row.send("column_8")
-
 		
 		# extract correct values from columns with numbers
 		for i in 0..5 do 
@@ -254,16 +235,19 @@ class ImportedFilesController < ApplicationController
 
 
 	def protect_credit_card(data)
-		# open file to determine file format,
-		# then encrypt credit card numbers
-		# but before encrypt, the system detects if this column is a credit card number to mask
+		# By ERB:
+		#
+		# for security reason the system detects if this column is a credit card number
+		# if the column is a credit card it will be masked and encrypt the original number in other column
+		# encrypton method is not reversible (bcrypt)
+
 		return if data == nil
 
 		if (data.length >= 14 and data.length <= 16) and (is_number?(data)) then
-			# credit card found
+			# if credit card found
 			if detect_franchise(data) != nil then
 				masked_credit_card = "xxxx-xxxx-xxxx-"+data.last(4).to_s
-				# encrypt original
+				# encrypt original credit card number
 				encrypt_credit_card(data)
 				return masked_credit_card
 			else
@@ -283,8 +267,10 @@ class ImportedFilesController < ApplicationController
 	    if iin_source then 
 	      i=0
 	      # 
-	      # IIN Codes structure = string lenght, code range start, code range end, franchise
-	      #   
+	      # IIN Codes 
+	      # Source: https://en.wikipedia.org/wiki/Payment_card_number#Major_Industry_Identifier_.28MII.29
+	      # Data structure: string lenght, IINN code range start, IIN code range end, franchise
+
 	      iin_data = [
 	      	[1,1,1,"UATP"],
 	        [1,1,1,"GPN"],
@@ -348,9 +334,6 @@ class ImportedFilesController < ApplicationController
 	        [4,9860,9860,"Humo"]
 	      ]
 
-	      puts "=== credit card:"
-	      puts credit_card
-
 	      mat = Matrix[ *iin_data ]
 	      mat.column(0).to_a.each  do |iic_range|
 
@@ -372,10 +355,13 @@ class ImportedFilesController < ApplicationController
 	end
 
 	def encrypt_credit_card(data)
+
+		# using bcrypt gem to create a non-reversible encryption in credit card numbers
 		require 'bcrypt'
+
+		# for performance reasons cost has changed 6. 
 		BCrypt::Engine.cost = 6
 		@encrypted_credit_card = BCrypt::Password.create(data)
-		puts @encrypted_credit_card
 
 		return @encrypted_credit_card
 	end
